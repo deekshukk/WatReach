@@ -9,26 +9,26 @@ export default function App() {
     {
       id: 1,
       name: "Alex Chen",
-      role: "Software Engineer",
-      company: "Google",
+      role: "Role",
+      company: "Company",
     },
     {
       id: 2,
       name: "Sarah Wong",
-      role: "Product Manager",
-      company: "Google",
+      role: "Role",
+      company: "Company",
     },
     {
       id: 3,
       name: "Michael Liu",
-      role: "Data Scientist",
-      company: "Google",
+      role: "Role",
+      company: "Company",
     },
     {
       id: 4,
       name: "Jessica Park",
-      role: "UX Designer",
-      company: "Google",
+      role: "Role",
+      company: "Company",
     },
   ])
 
@@ -49,7 +49,7 @@ export default function App() {
           <div className="logo-circle yellow-bg">
             <Users className="icon-black" />
           </div>
-          <h1 className="title">Watreach</h1>
+          <h1 className="title">WatReach</h1>
         </div>
       </header>
 
@@ -85,12 +85,12 @@ export default function App() {
           <div className="logo-circle yellow-bg">
             <Users className="icon-black" />
           </div>
-          <h1 className="title">Watreach</h1>
+          <h1 className="title">WatReach</h1>
         </div>
         <button
           className="btn-yellow-small" onClick={() => setCurrentView("home")}
         >
-          <Scan className="btn-icon" />
+          <Scan />
           New Scan
         </button>
       </header>
@@ -110,7 +110,7 @@ export default function App() {
         className="linkedin-btn"
         >
         View LinkedIn
-      </a>
+      </a>      
     </div>
   ))}
 </div>
