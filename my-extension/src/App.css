@@ -55,16 +55,16 @@
   }
   
   .app-container {
-    width: 350px;
-    height: 500px;
-    background: white;
-    display: flex;
+    display: inline-block; /* key change to fit content size */
     flex-direction: column;
     border: 1px solid #ddd;
     border-radius: 6px;
-    overflow: hidden;
+    width: fit-content;
+    height: fit-content;
+    box-sizing: border-box;
+    width: 300px;
   }
-  
+
   /* Containers */
   .container {
     padding: 16px;
