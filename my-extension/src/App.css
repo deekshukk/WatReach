@@ -51,7 +51,7 @@
     margin: 0;
     padding: 0;
     background: #f9fafb;
-    color: #111;
+    color: #161515;
   }
   
   .app-container {
@@ -106,8 +106,8 @@
   }
   
   .title {
-    font-weight: 700;
-    font-size: 1.25rem; /* 20px */
+    font-weight: 600;
+    font-size: 18px;
     margin: 0;
   }
   
@@ -117,7 +117,7 @@
   }
   
   .main-content h2 {
-    font-size: 1.25rem;
+    font-size: 1rem;
     margin-bottom: 12px;
     font-weight: 600;
   }
@@ -134,7 +134,7 @@
     color: black;
     font-weight: 600;
     padding: 18px 12px;
-    font-size: 1rem;
+    font-size: 12px;
     width: 100%;
     cursor: pointer;
     display: flex;
@@ -186,13 +186,12 @@
   
   .scanning-view h2 {
     font-weight: 600;
-    font-size: 1.25rem;
-    margin-bottom: 8px;
+    font-size: 16px;
   }
   
   .scanning-view p {
     color: #4b5563;
-    font-size: 1rem;
+    font-size: 12px;
     max-width: 250px;
   }
   
