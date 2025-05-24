@@ -37,40 +37,46 @@ function extractJobInfoFromTags() {
     return jobData;
   }
 
-
-
-
-  function injectWatReachButton(modal) {
-    const old = document.getElementById("watreach-btn");
-    if (old) old.remove();
+  // function injectWatReachButton(modal) {
+  //   const old = document.getElementById("watreach-btn");
+  //   if (old) old.remove();
   
-    modal.style.position = "relative";  // 👈 Add this
+  //   modal.style.position = "relative";  // 👈 Add this
 
-    const button = document.createElement("button");
-    button.id = "watreach-btn";
-    button.innerText = "🔍 Find People";
-    button.style.position = "absolute";
-    button.style.top = "20px";
-    button.style.right = "20px";
-    button.style.zIndex = "99999";  // 👈 Increase this
-    button.style.padding = "12px 20px";
-    button.style.background = "#0066ff";
-    button.style.color = "white";
-    button.style.borderRadius = "6px";
-    button.style.border = "none";
-    button.style.cursor = "pointer";
+  //   const button = document.createElement("button");
+  //   button.id = "watreach-btn";
+  //   button.innerText = "🔍 Find People";
+  //   button.style.position = "absolute";
+  //   button.style.top = "20px";
+  //   button.style.right = "20px";
+  //   button.style.zIndex = "99999";  // 👈 Increase this
+  //   button.style.padding = "12px 20px";
+  //   button.style.background = "#0066ff";
+  //   button.style.color = "white";
+  //   button.style.borderRadius = "6px";
+  //   button.style.border = "none";
+  //   button.style.cursor = "pointer";
   
-    button.onclick = () => {
+  //   button.onclick = () => {
+  //     const job = extractJobInfoFromTags();
+  //     console.log("✅ WatReach Job Data:", job);
+  //     alert("Scraped job info:\n" + JSON.stringify(job, null, 2));
+  //     // TODO: Send to backend here
+  //   };
+  
+  //   // ✅ inject into the modal element, not body
+  //   modal.appendChild(button);
+  // }
+
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "scanJobPosting") {
       const job = extractJobInfoFromTags();
-      console.log("✅ WatReach Job Data:", job);
-      alert("Scraped job info:\n" + JSON.stringify(job, null, 2));
-      // TODO: Send to backend here
-    };
+      console.log("✅ Job Data sent to popup:", job);
+      sendResponse(job); // send the data back to React
+    }
+  });
   
-    // ✅ inject into the modal element, not body
-    modal.appendChild(button);
-  }
-  
+  // what is this 
   const observer = new MutationObserver(() => {
     const modal = document.querySelector('.modal__content.height--100.overflow--hidden');
     const alreadyInjected = document.getElementById("watreach-btn");

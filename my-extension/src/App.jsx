@@ -4,7 +4,7 @@ import "./App.css"
 
 export default function App() {
   const [currentView, setCurrentView] = useState("home")
-  const [, setIsScanning] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
   const [connections] = useState([
     {
       id: 1,
@@ -33,14 +33,32 @@ export default function App() {
   ])
 
   const handleScan = () => {
-    setIsScanning(true)
-    setCurrentView("scanning")
-
-    setTimeout(() => {
-      setIsScanning(false)
-      setCurrentView("connections")
-    }, 1500)
-  }
+    setIsScanning(true);
+    setCurrentView("scanning");
+  
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: "scanJobPosting" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error:", chrome.runtime.lastError.message);
+            setIsScanning(false);
+            setCurrentView("home");
+            return;
+          }
+  
+          console.log("🔍 Scraped Job Info:", response);
+          alert("Scraped job info:\n" + JSON.stringify(response, null, 2));
+  
+          setTimeout(() => {
+            setIsScanning(false);
+            setCurrentView("connections");
+          }, 1000);
+        }
+      );
+    });
+  };
 
   const renderHomeView = () => (
     <div className="container">
@@ -59,7 +77,7 @@ export default function App() {
           Scan job postings to find connections that can help with your application
         </p>
         <button className="btn-yellow" onClick={handleScan}>
-          <Scan className="btn-icon" />
+          {/* <Scan className="btn-icon" /> */}
           Scan Job Posting
         </button>
       </main>
