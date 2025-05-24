@@ -85,18 +85,7 @@ export default function App() {
       <p>Finding relevant connections</p>
     </div>
   )
-
-  const relevanceClass = (relevance) => {
-    switch (relevance) {
-      case "High":
-        return "badge-green"
-      case "Medium":
-        return "badge-blue"
-      default:
-        return "badge-gray"
-    }
-  }
-
+  
   const renderConnectionsView = () => (
     <div className="container">
       <header className="header">
