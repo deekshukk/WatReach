@@ -72,7 +72,7 @@ export default function App() {
 
   const renderScanningView = () => (
     <div className="scanning-view">
-      <Loader2 className="loader-spin yellow-icon" />
+      <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
       <h2>Scanning Job Posting</h2>
       <p>Finding relevant connections</p>
     </div>
@@ -110,10 +110,10 @@ export default function App() {
         className="linkedin-btn"
         >
         View LinkedIn
-      </a>      
+        </a>      
+        </div>
+      ))}
     </div>
-  ))}
-</div>
 
       <footer className="footer">
         Scan job postings and find connections
