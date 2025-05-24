@@ -3,10 +3,13 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  entry: './src/popup.jsx',
+  entry: {
+    popup: './src/popup.jsx',
+    content: './src/content.js'  // 👈 Add this
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'popup.js',
+    filename: '[name].js', // outputs popup.js and content.js
     clean: true,
   },
   module: {
@@ -22,6 +25,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'public/popup.html',
       filename: 'popup.html',
+      chunks: ['popup']  // 👈 only inject popup.js into popup.html
     }),
     new CopyPlugin({
       patterns: [
