@@ -9,34 +9,26 @@ export default function App() {
     {
       id: 1,
       name: "Alex Chen",
-      role: "Software Engineer",
-      company: "Google",
-      relevance: "High",
-      alumni: true,
+      role: "Role",
+      company: "Company",
     },
     {
       id: 2,
       name: "Sarah Wong",
-      role: "Product Manager",
-      company: "Microsoft",
-      relevance: "Medium",
-      alumni: true,
+      role: "Role",
+      company: "Company",
     },
     {
       id: 3,
       name: "Michael Liu",
-      role: "Data Scientist",
-      company: "Amazon",
-      relevance: "High",
-      alumni: false,
+      role: "Role",
+      company: "Company",
     },
     {
       id: 4,
       name: "Jessica Park",
-      role: "UX Designer",
-      company: "Apple",
-      relevance: "Low",
-      alumni: true,
+      role: "Role",
+      company: "Company",
     },
   ])
 
@@ -57,14 +49,14 @@ export default function App() {
           <div className="logo-circle yellow-bg">
             <Users className="icon-black" />
           </div>
-          <h1 className="title">Watreach</h1>
+          <h1 className="title">WatReach</h1>
         </div>
       </header>
 
       <main className="main-content">
-        <h2>Connect with Waterloo Alumni</h2>
+        <h2>Find your next dream job 🚀 </h2>
         <p className="description">
-          Scan job postings to find alumni and connections that can help with your application
+          Scan job postings to find connections that can help with your application
         </p>
         <button className="btn-yellow" onClick={handleScan}>
           <Scan className="btn-icon" />
@@ -73,30 +65,19 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        Watreach • Scan job postings and find connections
+        Scan job postings and find connections
       </footer>
     </div>
   )
 
   const renderScanningView = () => (
     <div className="scanning-view">
-      <Loader2 className="loader-spin yellow-icon" />
+      <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
       <h2>Scanning Job Posting</h2>
-      <p>Finding relevant connections for this position...</p>
+      <p>Finding relevant connections</p>
     </div>
   )
-
-  const relevanceClass = (relevance) => {
-    switch (relevance) {
-      case "High":
-        return "badge-green"
-      case "Medium":
-        return "badge-blue"
-      default:
-        return "badge-gray"
-    }
-  }
-
+  
   const renderConnectionsView = () => (
     <div className="container">
       <header className="header">
@@ -104,49 +85,38 @@ export default function App() {
           <div className="logo-circle yellow-bg">
             <Users className="icon-black" />
           </div>
-          <h1 className="title">Watreach</h1>
+          <h1 className="title">WatReach</h1>
         </div>
         <button
-          className="btn-outline-yellow small-btn"
-          onClick={() => setCurrentView("home")}
+          className="btn-yellow-small" onClick={() => setCurrentView("home")}
         >
-          <Scan className="btn-icon-small" />
+          <Scan />
           New Scan
         </button>
       </header>
-
-      <section className="job-info">
-        <h3 className="label">Currently Viewing:</h3>
-        <h2>Software Developer Intern - Winter 2026</h2>
-        <p>Shopify • Toronto, ON</p>
-      </section>
 
       <p className="connections-count">
         Found {connections.length} potential connections
       </p>
 
       <div className="connections-list">
-        {connections.map((connection) => (
-          <div key={connection.id} className="card">
-            <div className="card-left">
-              <div className="name-row">
-                <h3>{connection.name}</h3>
-                {connection.alumni && <span className="badge badge-yellow">Alumni</span>}
-              </div>
-              <p className="role-company">
-                {connection.role} at {connection.company}
-              </p>
-              <span className={`badge ${relevanceClass(connection.relevance)}`}>
-                {connection.relevance} Relevance
-              </span>
-            </div>
-            <button className="btn-yellow small-btn">Connect</button>
-          </div>
-        ))}
-      </div>
+      {connections.map((connection) => (
+      <div key={connection.id} className="connection-card">
+        <div className="connection-info">
+          <h3 className="connection-name">{connection.name}</h3>
+          <p className="connection-role">{connection.role}</p>
+        </div>
+        <a
+        className="linkedin-btn"
+        >
+        View LinkedIn
+        </a>      
+        </div>
+      ))}
+    </div>
 
       <footer className="footer">
-        Watreach • Scan job postings and find connections
+        Scan job postings and find connections
       </footer>
     </div>
   )
