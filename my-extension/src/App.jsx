@@ -73,7 +73,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        Watreach • Scan job postings and find connections
+        Scan job postings and find connections
       </footer>
     </div>
   )
@@ -82,7 +82,7 @@ export default function App() {
     <div className="scanning-view">
       <Loader2 className="loader-spin yellow-icon" />
       <h2>Scanning Job Posting</h2>
-      <p>Finding relevant connections for this position...</p>
+      <p>Finding relevant connections</p>
     </div>
   )
 
@@ -109,7 +109,7 @@ export default function App() {
         <button
           className="btn-yellow-small" onClick={() => setCurrentView("home")}
         >
-          <Scan />
+          <Scan className="btn-icon" />
           New Scan
         </button>
       </header>
@@ -135,7 +135,7 @@ export default function App() {
 </div>
 
       <footer className="footer">
-        Watreach • Scan job postings and find connections
+        Scan job postings and find connections
       </footer>
     </div>
   )
