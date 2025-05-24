@@ -146,7 +146,7 @@
   }
   
   .btn-yellow:hover {
-    background-color: #eab308; /* yellow-500 */
+    background-color: #eab308; 
   }
   
   .btn-icon {
@@ -159,7 +159,7 @@
     padding-top: 12px;
     font-size: 0.75rem;
     text-align: center;
-    color: #6b7280; /* gray-500 */
+    color: #6b7280; 
   }
   
   /* Scanning view */
@@ -198,7 +198,7 @@
   }
   
   /* Connections view */
-  
+
   .job-info {
     margin-bottom: 16px;
   }
@@ -214,3 +214,76 @@
     font-weight: 600;
     font-size: 1
   }
+
+  .connections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  
+  .connection-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9fafb;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb; /* gray-200 */
+  }
+  
+  .connection-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .connection-name {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+  }
+  
+  .connection-role {
+    font-size: 0.875rem;
+    color: #6b7280; /* gray-500 */
+    margin: 4px 0 0 0;
+  }
+  
+  .linkedin-btn {
+    background-color: #0a66c2;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+  
+  .linkedin-btn:hover {
+    background-color: #004182;
+  }
+
+  .btn-yellow-small {
+    background-color: #facc15;
+    border: none;
+    color: black;
+    font-weight: 600;
+    padding: 18px 12px;
+    font-size: 1rem;
+    width: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-icon-small {
+    width: 5px;
+    height: 5px;
+  }
+  
