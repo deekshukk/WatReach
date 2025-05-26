@@ -1,3 +1,4 @@
+
 console.log("content.js scraper is live");
 
 function extractJobInfoFromTags() {
@@ -37,6 +38,48 @@ function extractJobInfoFromTags() {
     return jobData;
   }
 
+  function extractQueryParams(jobData, defaultPersonCount = 5) {
+    const jobTitleRaw = jobData["Job Title"] || "";
+    const companyName = jobData["Organization"] || "";
+  
+    const jobTitle = jobTitleRaw.toLowerCase();
+  
+    const titleMap = {
+      software: ["Software Engineer", "Technical Recruiter", "Engineering Manager"],
+      finance: ["Finance Analyst", "Portfolio Manager", "Investment Analyst", "Finance Recruiter"],
+      investment: ["Investment Analyst", "Wealth Manager", "Financial Advisor", "Recruiter"],
+      product: ["Product Manager", "Product Owner", "Technical Recruiter"],
+      data: ["Data Scientist", "ML Engineer", "Analytics Manager", "Data Recruiter"],
+      design: ["UX Designer", "Product Designer", "Design Manager", "Recruiter"],
+      legal: ["Legal Counsel", "Compliance Officer", "Legal Recruiter"],
+      marketing: ["Marketing Manager", "Digital Strategist", "Marketing Recruiter"],
+      sales: ["Sales Manager", "Account Executive", "Sales Recruiter"],
+      accounting: ["Accountant", "Controller", "Accounting Recruiter"],
+    };
+  
+    const matchedTitles = new Set();
+  
+    // Map keywords → titles
+    for (const [keyword, titles] of Object.entries(titleMap)) {
+      if (jobTitle.includes(keyword)) {
+        titles.forEach(t => matchedTitles.add(t));
+      }
+    }
+  
+    if (matchedTitles.size === 0) {
+      matchedTitles.add("Recruiter");
+      matchedTitles.add("Hiring Manager");
+    }
+  
+    const result = {
+      title: Array.from(matchedTitles),
+      organization_name: companyName.trim(),
+    };
+  
+    console.log("✅ extractQueryParams →", result);
+    return result;
+  }
+
   // function injectWatReachButton(modal) {
   //   const old = document.getElementById("watreach-btn");
   //   if (old) old.remove();
@@ -73,6 +116,8 @@ function extractJobInfoFromTags() {
       const job = extractJobInfoFromTags();
       console.log("✅ Job Data sent to popup:", job);
       sendResponse(job); // send the data back to React
+      const query = extractQueryParams(job);
+      console.log(query);
     }
   });
   

@@ -48,8 +48,8 @@ export default function App() {
             return;
           }
   
-          console.log("🔍 Scraped Job Info:", response);
-          alert("Scraped job info:\n" + JSON.stringify(response, null, 2));
+          // console.log("🔍 Scraped Job Info:", response);
+          // alert("Scraped job info:\n" + JSON.stringify(response, null, 2));
   
           setTimeout(() => {
             setIsScanning(false);
@@ -108,7 +108,7 @@ export default function App() {
         <button
           className="btn-yellow-small" onClick={() => setCurrentView("home")}
         >
-          <Scan />
+          {/* <Scan /> */}
           New Scan
         </button>
       </header>
