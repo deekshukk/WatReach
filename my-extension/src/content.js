@@ -1,3 +1,4 @@
+
 console.log("content.js scraper is live");
 
 function extractJobInfoFromTags() {
@@ -37,55 +38,67 @@ function extractJobInfoFromTags() {
     return jobData;
   }
 
-  // function injectWatReachButton(modal) {
-  //   const old = document.getElementById("watreach-btn");
-  //   if (old) old.remove();
+  function extractQueryParams(jobData, defaultPersonCount = 5) {
+    const jobTitleRaw = jobData["Job Title"] || "";
+    const companyName = jobData["Organization"] || "";
   
-  //   modal.style.position = "relative";  // 👈 Add this
-
-  //   const button = document.createElement("button");
-  //   button.id = "watreach-btn";
-  //   button.innerText = "🔍 Find People";
-  //   button.style.position = "absolute";
-  //   button.style.top = "20px";
-  //   button.style.right = "20px";
-  //   button.style.zIndex = "99999";  // 👈 Increase this
-  //   button.style.padding = "12px 20px";
-  //   button.style.background = "#0066ff";
-  //   button.style.color = "white";
-  //   button.style.borderRadius = "6px";
-  //   button.style.border = "none";
-  //   button.style.cursor = "pointer";
+    const jobTitle = jobTitleRaw.toLowerCase();
   
-  //   button.onclick = () => {
-  //     const job = extractJobInfoFromTags();
-  //     console.log("✅ WatReach Job Data:", job);
-  //     alert("Scraped job info:\n" + JSON.stringify(job, null, 2));
-  //     // TODO: Send to backend here
-  //   };
+    const titleMap = {
+      software: ["Software Engineer", "Technical Recruiter", "Engineering Manager"],
+      finance: ["Finance Analyst", "Portfolio Manager", "Investment Analyst", "Finance Recruiter"],
+      investment: ["Investment Analyst", "Wealth Manager", "Financial Advisor", "Recruiter"],
+      product: ["Product Manager", "Product Owner", "Technical Recruiter"],
+      data: ["Data Scientist", "ML Engineer", "Analytics Manager", "Data Recruiter"],
+      design: ["UX Designer", "Product Designer", "Design Manager", "Recruiter"],
+      legal: ["Legal Counsel", "Compliance Officer", "Legal Recruiter"],
+      marketing: ["Marketing Manager", "Digital Strategist", "Marketing Recruiter"],
+      sales: ["Sales Manager", "Account Executive", "Sales Recruiter"],
+      accounting: ["Accountant", "Controller", "Accounting Recruiter"],
+    };
   
-  //   // ✅ inject into the modal element, not body
-  //   modal.appendChild(button);
-  // }
+    const matchedTitles = new Set();
+  
+    // Map keywords → titles
+    for (const [keyword, titles] of Object.entries(titleMap)) {
+      if (jobTitle.includes(keyword)) {
+        titles.forEach(t => matchedTitles.add(t));
+      }
+    }
+  
+    if (matchedTitles.size === 0) {
+      matchedTitles.add("Recruiter");
+      matchedTitles.add("Hiring Manager");
+    }
+  
+    const result = {
+      title: Array.from(matchedTitles),
+      organization_name: companyName.trim(),
+    };
+  
+    console.log("✅ extractQueryParams →", result);
+    return result;
+  }
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "scanJobPosting") {
       const job = extractJobInfoFromTags();
       console.log("✅ Job Data sent to popup:", job);
-      sendResponse(job); // send the data back to React
+      sendResponse(job); 
+      const query = extractQueryParams(job);
+      console.log(query);
     }
   });
   
-  // what is this 
-  const observer = new MutationObserver(() => {
-    const modal = document.querySelector('.modal__content.height--100.overflow--hidden');
-    const alreadyInjected = document.getElementById("watreach-btn");
+  // const observer = new MutationObserver(() => {
+  //   const modal = document.querySelector('.modal__content.height--100.overflow--hidden');
+  //   const alreadyInjected = document.getElementById("watreach-btn");
   
-    if (modal && !alreadyInjected) {
-      console.log("🟢 Modal detected, injecting button...");
-      injectWatReachButton(modal);
-    }
-  });
+  //   if (modal && !alreadyInjected) {
+  //     console.log("🟢 Modal detected, injecting button...");
+  //     injectWatReachButton(modal);
+  //   }
+  // });
   
   observer.observe(document.body, {
     childList: true,
