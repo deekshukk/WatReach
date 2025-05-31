@@ -64,9 +64,9 @@ export default function App() {
     <div className="container">
       <header className="header">
         <div className="header-left">
-          <div className="logo-circle yellow-bg">
+          {/* <div className="logo-circle yellow-bg">
             <Users className="icon-black" />
-          </div>
+          </div> */}
           <h1 className="title">WatReach</h1>
         </div>
       </header>
