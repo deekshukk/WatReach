@@ -7,7 +7,7 @@
       "default_popup": "popup.html",
       "default_title": "Open Extension"
     },
-    "permissions": ["activeTab", "scripting"],
+    "permissions": ["activeTab", "scripting", "storage", "downloads"],
     "host_permissions": ["https://waterlooworks.uwaterloo.ca/*"],
     "content_scripts": [
       {

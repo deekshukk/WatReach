@@ -1,3 +1,4 @@
+import { findRelevantConnections } from './apollo';
 
 console.log("content.js scraper is live");
 
@@ -86,19 +87,28 @@ function extractJobInfoFromTags() {
       console.log("✅ Job Data sent to popup:", job);
       sendResponse(job); 
       const query = extractQueryParams(job);
-      console.log(query);
+      console.log("Query params:", query);
+      
+      // Find relevant connections using Apollo
+      findRelevantConnections(query)
+        .then(result => {
+          // Send the results back to the popup
+          chrome.runtime.sendMessage({
+            action: "apolloResults",
+            organization: result.organization,
+            people: result.people
+          });
+        })
+        .catch(error => {
+          console.error("Error finding connections:", error);
+          chrome.runtime.sendMessage({
+            action: "apolloError",
+            error: error.message
+          });
+        });
     }
   });
   
-  // const observer = new MutationObserver(() => {
-  //   const modal = document.querySelector('.modal__content.height--100.overflow--hidden');
-  //   const alreadyInjected = document.getElementById("watreach-btn");
-  
-  //   if (modal && !alreadyInjected) {
-  //     console.log("🟢 Modal detected, injecting button...");
-  //     injectWatReachButton(modal);
-  //   }
-  // });
   
   observer.observe(document.body, {
     childList: true,
