@@ -30,6 +30,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: 'manifest.json', to: '.' },
+        { from: 'src/background.js', to: 'background.js' },
       ],
     }),
   ],

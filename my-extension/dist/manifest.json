@@ -8,12 +8,15 @@
       "default_title": "Open Extension"
     },
     "permissions": ["activeTab", "scripting", "storage", "downloads"],
-    "host_permissions": ["https://waterlooworks.uwaterloo.ca/*"],
+    "host_permissions": ["https://waterlooworks.uwaterloo.ca/*", "https://api.apollo.io/*"],
     "content_scripts": [
       {
         "matches": ["https://waterlooworks.uwaterloo.ca/*"],
         "js": ["content.js"],
         "run_at": "document_idle"
       }
-    ]
+    ],
+    "background": {
+      "service_worker": "background.js"
+    }
   }
