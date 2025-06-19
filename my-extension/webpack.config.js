@@ -5,11 +5,12 @@ const CopyPlugin = require('copy-webpack-plugin');
 module.exports = {
   entry: {
     popup: './src/popup.jsx',
-    content: './src/content.js'  // 👈 Add this
+    content: './src/content.js',
+    background: './src/background.js'  // 👈 Add background script
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: '[name].js', // outputs popup.js and content.js
+    filename: '[name].js', // outputs popup.js, content.js, and background.js
     clean: true,
   },
   module: {
@@ -25,7 +26,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'public/popup.html',
       filename: 'popup.html',
-      chunks: ['popup']  // 👈 only inject popup.js into popup.html
+      chunks: ['popup']  // only inject popup.js into popup.html
     }),
     new CopyPlugin({
       patterns: [
