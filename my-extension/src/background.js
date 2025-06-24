@@ -52,7 +52,7 @@ const APOLLO_API_KEY = 'RkAYDXn_fooT15v42PkAwg';
 async function enrichOrganizationByDomain(domain) {
   if (!domain) return null;
 
-  const url = `https://api.apollo.io/api/v1/organizations/enrich?api_key=${APOLLO_API_KEY}&domain=${domain}`;
+  const url = `https://api.apollo.io/api/v1/organizations/enrich?domain=${domain}`;
 
   try {
     console.log('Apollo API: Enriching organization by domain:', domain);
@@ -61,6 +61,7 @@ async function enrichOrganizationByDomain(domain) {
       headers: {
         'Cache-Control': 'no-cache',
         'Content-Type': 'application/json',
+        'X-Api-Key': APOLLO_API_KEY
       },
     });
     const data = await response.json();
@@ -219,31 +220,67 @@ async function tryMultipleOrgNames(originalOrganizationName, locations = [], key
   return bestMatch;
 }
 
-async function searchPeopleOnApollo({ organization, personSeniorities = [], personTitles = [] }) {
-  if (!organization?.domain) throw new Error('Organization domain not found');
-  if (!organization?.id) throw new Error('Organization ID not found for people search.');
+async function searchPeopleOnApollo(params) {
+  // params should include all possible Apollo people search parameters
+  // e.g., organization, personTitles, personSeniorities, organizationLocations, personLocations, etc.
+  const url = 'https://api.apollo.io/api/v1/mixed_people/search';
 
-  const url = 'https://api.apollo.io/v1/people/search';
-  const searchQuery = {
-    q_organization_domains: [organization.domain],
-    organization_ids: [organization.id],
-    page: 1,
-    per_page: 50
-  };
+  // Build the request body dynamically from params
+  const body = {};
 
-  // Only add seniorities if they exist and are not too restrictive
-  if (personSeniorities.length > 0 && !personSeniorities.includes('intern')) {
-    searchQuery.person_seniorities = personSeniorities;
+  // Organization info
+  if (params.organization) {
+    if (params.organization.domain) {
+      body.q_organization_domains_list = [params.organization.domain];
+    }
+    if (params.organization.id) {
+      body.organization_ids = [params.organization.id];
+    }
+    if (params.organization.name) {
+      body.q_organization_names = [params.organization.name];
+    }
   }
 
-  // Only add titles if they exist
-  if (personTitles.length > 0) {
-    searchQuery.person_titles = personTitles;
-    searchQuery.include_similar_titles = true;
+  // Titles
+  if (params.personTitles && params.personTitles.length > 0) {
+    body.person_titles = params.personTitles;
+    body.include_similar_titles = true;
   }
+
+  // Seniorities
+  if (params.personSeniorities && params.personSeniorities.length > 0) {
+    body.person_seniorities = params.personSeniorities;
+  }
+
+  // Locations
+  if (params.organizationLocations && params.organizationLocations.length > 0) {
+    body.organization_locations = params.organizationLocations;
+  }
+  if (params.personLocations && params.personLocations.length > 0) {
+    body.person_locations = params.personLocations;
+  }
+
+  // Keywords
+  if (params.q_keywords) {
+    body.q_keywords = params.q_keywords;
+  }
+
+  // Email/contact status
+  if (params.contact_email_status && params.contact_email_status.length > 0) {
+    body.contact_email_status = params.contact_email_status;
+  }
+
+  // Employee ranges
+  if (params.organization_num_employees_ranges && params.organization_num_employees_ranges.length > 0) {
+    body.organization_num_employees_ranges = params.organization_num_employees_ranges;
+  }
+
+  // Pagination
+  body.page = params.page || 1;
+  body.per_page = params.per_page || 25;
 
   try {
-    console.log('Apollo API: Searching for people at org domain:', organization.domain, 'Org ID:', organization.id, 'Seniorities:', personSeniorities, 'Titles:', personTitles);
+    console.log('Apollo API: Calling mixed_people/search with body:', body);
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -251,22 +288,14 @@ async function searchPeopleOnApollo({ organization, personSeniorities = [], pers
         'Cache-Control': 'no-cache',
         'X-Api-Key': APOLLO_API_KEY
       },
-      body: JSON.stringify(searchQuery)
+      body: JSON.stringify(body)
     });
     const data = await response.json();
-    console.log('Apollo API: Full people search response:', JSON.stringify(data, null, 2));
-    
+    console.log('Apollo API: mixed_people/search response:', JSON.stringify(data, null, 2));
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status} - ${JSON.stringify(data)}`);
     }
-
-    // Check if we have any people in the response
-    if (!data.people || data.people.length === 0) {
-      console.log('No people found for organization:', organization.name);
-      return [];
-    }
-
-    return data.people;
+    return data.people || [];
   } catch (error) {
     console.error('Error searching people on Apollo:', error);
     return [];
