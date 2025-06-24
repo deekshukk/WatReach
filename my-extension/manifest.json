@@ -9,7 +9,7 @@
   },
   "permissions": [
     "activeTab", 
-    "scripting", 
+    "scripting" 
   ],
   "host_permissions": [
     "https://waterlooworks.uwaterloo.ca/*",
@@ -24,5 +24,6 @@
   ],
   "background": {
     "service_worker": "background.js"
-  },
+  }
+  
 }

@@ -1,4 +1,4 @@
-const OPENAI_API_KEY = 'sk-your-api-key-here'; 
+const OPENAI_API_KEY = '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'; 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "generateContactTitles") {
@@ -62,7 +62,6 @@ Return ONLY a JSON array of job titles, no other text. Example: ["Engineering Ma
     const data = await response.json();
     let content = data.choices[0].message.content.trim();
     
-    // Clean up the response - sometimes AI adds extra text
     if (content.includes('[')) {
       content = content.substring(content.indexOf('['));
     }
