@@ -1,3 +1,5 @@
+const OPENAI_API_KEY = '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'; 
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "generateContactTitles") {
     generateContactTitlesWithOpenAI(request.jobData)
@@ -9,20 +11,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: false, error: error.message });
       });
     
-    // Return true to indicate we'll send response asynchronously
-    return true;
+    return true; // Keep message channel open for async response
   }
 });
 
 async function generateContactTitlesWithOpenAI(jobData) {
-  // Get API key from storage
-  const result = await chrome.storage.sync.get(['openai_api_key']);
-  const apiKey = result.openai_api_key;
-  
-  if (!apiKey) {
-    throw new Error("OpenAI API key not found. Please set it in extension options.");
-  }
-
   const jobTitle = jobData["Job Title"] || "";
   const organization = jobData["Organization"] || "";
   const jobDescription = jobData["Job Description"] || "";
@@ -42,7 +35,7 @@ Return ONLY a JSON array of job titles, no other text. Example: ["Engineering Ma
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
@@ -69,7 +62,6 @@ Return ONLY a JSON array of job titles, no other text. Example: ["Engineering Ma
     const data = await response.json();
     let content = data.choices[0].message.content.trim();
     
-    // Clean up the response - sometimes AI adds extra text
     if (content.includes('[')) {
       content = content.substring(content.indexOf('['));
     }
