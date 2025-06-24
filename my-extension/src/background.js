@@ -49,6 +49,9 @@ function deriveExpectedDomain(organizationName) {
 
 const APOLLO_API_KEY = 'RkAYDXn_fooT15v42PkAwg';
 
+// LLM (OpenAI) API Key
+const OPENAI_API_KEY = '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'; // IMPORTANT: Replace with your actual key
+
 async function enrichOrganizationByDomain(domain) {
   if (!domain) return null;
 
@@ -302,44 +305,100 @@ async function searchPeopleOnApollo(params) {
   }
 }
 
+// LLM-powered parameter extraction
+async function generateLLMParamsWithOpenAI(jobData) {
+  const jobTitle = jobData["Job Title"] || "";
+  const organization = jobData["Organization"] || "";
+  const jobDescription = jobData["Job Description"] || "";
+  const requirements = jobData["Requirements"] || "";
+
+  const prompt = `Given the following job posting, generate a JSON object with:\n- job_titles: 5-7 specific job titles of people who would be decision makers or involved in hiring for this role (e.g., managers, team leads, recruiters, department heads)\n- seniorities: relevant seniority levels (e.g., entry, manager, director, vp, c_suite)\n- keywords: relevant keywords or skills for the search\n\nJob Title: ${jobTitle}\nCompany: ${organization}\nDescription: ${jobDescription.substring(0, 400)}\nRequirements: ${requirements.substring(0, 200)}\n\nReturn ONLY a JSON object like:\n{\n  "job_titles": [...],\n  "seniorities": [...],\n  "keywords": [...]\n}`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are an expert at extracting structured search parameters from job postings. Always respond with valid JSON." },
+          { role: "user", content: prompt }
+        ],
+        max_tokens: 300,
+        temperature: 0.2
+      })
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`OpenAI API error: ${error.error?.message || response.statusText}`);
+    }
+    const data = await response.json();
+    let content = data.choices[0].message.content.trim();
+    // Extract JSON from the response
+    const jsonStart = content.indexOf('{');
+    const jsonEnd = content.lastIndexOf('}') + 1;
+    if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in LLM response");
+    const params = JSON.parse(content.substring(jsonStart, jsonEnd));
+    return params;
+  } catch (error) {
+    console.error("Error calling OpenAI for LLM params:", error);
+    throw error;
+  }
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'findRelevantConnections') {
     (async () => {
       try {
         const originalOrganizationName = request.query.organization_name;
+        if (!originalOrganizationName || typeof originalOrganizationName !== 'string' || !originalOrganizationName.trim()) {
+          console.error('Organization name is missing or invalid:', originalOrganizationName);
+          sendResponse({ error: 'Organization name is missing or invalid.' });
+          return;
+        }
         console.log('Trying org names:', originalOrganizationName);
 
-        let organization = null;
-        const expectedDomain = deriveExpectedDomain(originalOrganizationName);
-
-        if (expectedDomain) {
-          organization = await enrichOrganizationByDomain(expectedDomain);
-          if (organization) {
-            console.log(`Successfully found organization via domain enrichment: ${organization.name} -> ${organization.domain}`);
-          }
-        }
-
-        // If domain enrichment failed or no domain was derived, fallback to name-based search
+        let organization = await enrichOrganizationByDomain(deriveExpectedDomain(originalOrganizationName));
         if (!organization) {
           console.log('Falling back to name-based organization search.');
           organization = await tryMultipleOrgNames(
             originalOrganizationName,
-            request.query.organization_locations,
-            request.query.q_organization_keyword_tags
+            Array.isArray(request.query.organization_locations) ? request.query.organization_locations : [],
+            Array.isArray(request.query.q_organization_keyword_tags) ? request.query.q_organization_keyword_tags : []
           );
         }
 
         console.log('Organization result:', organization);
-
         if (!organization) {
           sendResponse({ error: 'Organization not found. Please try editing the organization name and scan again.' });
           return;
         }
+
+        let personTitles = request.query.title;
+        try {
+          console.log("Requesting AI-generated titles...");
+          const aiTitles = await generateContactTitlesWithOpenAI(request.query);
+          if (aiTitles?.length > 0) {
+            personTitles = aiTitles;
+            console.log("Successfully using AI-generated titles:", personTitles);
+          }
+        } catch (e) {
+          console.warn("LLM title generation failed. Falling back to keyword-based titles.", e);
+        }
+
         const people = await searchPeopleOnApollo({
           organization,
-          personSeniorities: request.query.person_seniorities,
-          personTitles: request.query.title,
+          personSeniorities: Array.isArray(request.query.person_seniorities) ? request.query.person_seniorities : [],
+          personTitles: Array.isArray(personTitles) ? personTitles : [],
+          organizationLocations: Array.isArray(request.query.organization_locations) ? request.query.organization_locations : [],
+          q_keywords: request.query.q_keywords || '',
+          contact_email_status: Array.isArray(request.query.contact_email_status) ? request.query.contact_email_status : [],
+          organization_num_employees_ranges: Array.isArray(request.query.organization_num_employees_ranges) ? request.query.organization_num_employees_ranges : [],
         });
+
         console.log('People result:', people);
         sendResponse({ organization, people });
       } catch (error) {
@@ -348,5 +407,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     })();
     return true; // Keeps the message port open for async response
+  }
+
+  if (request.action === "generateLLMParams") {
+    generateLLMParamsWithOpenAI(request.jobData)
+      .then(params => sendResponse({ success: true, params }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true;
   }
 }); 

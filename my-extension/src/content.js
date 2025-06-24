@@ -42,114 +42,92 @@ function extractJobInfoFromTags() {
     return jobData;
   }
 
-  function extractQueryParams(jobData, defaultPersonCount = 5) {
-    const jobTitleRaw = jobData["Job Title"] || "";
-    const companyName = jobData["Organization"] || "";
-    const jobLocationRaw = jobData["Location"] || "";
-    const jobCategoryRaw = jobData["Category"] || jobData["Job Category"] || jobData["Skills"] || "";
-    const jobDescriptionRaw = jobData["Job Description"] || "";
-  
-    const jobTitle = jobTitleRaw.toLowerCase();
-    const jobDescription = jobDescriptionRaw.toLowerCase();
-  
-    const titleMap = {
-      software: ["Software Engineer", "Technical Recruiter", "Engineering Manager", "Hiring Manager", "Talent Acquisition"],
-      finance: ["Finance Analyst", "Portfolio Manager", "Investment Analyst", "Finance Recruiter", "Hiring Manager", "Talent Acquisition"],
-      investment: ["Investment Analyst", "Wealth Manager", "Financial Advisor", "Recruiter", "Hiring Manager", "Talent Acquisition"],
-      product: ["Product Manager", "Product Owner", "Technical Recruiter", "Hiring Manager", "Talent Acquisition"],
-      data: ["Data Scientist", "ML Engineer", "Analytics Manager", "Data Recruiter", "Hiring Manager", "Talent Acquisition"],
-      design: ["UX Designer", "Product Designer", "Design Manager", "Recruiter", "Hiring Manager", "Talent Acquisition"],
-      legal: ["Legal Counsel", "Compliance Officer", "Legal Recruiter", "Hiring Manager", "Talent Acquisition"],
-      marketing: ["Marketing Manager", "Digital Strategist", "Marketing Recruiter", "Hiring Manager", "Talent Acquisition"],
-      sales: ["Sales Manager", "Account Executive", "Sales Recruiter", "Hiring Manager", "Talent Acquisition"],
-      accounting: ["Accountant", "Controller", "Accounting Recruiter", "Hiring Manager", "Talent Acquisition"],
-    };
-  
-    const matchedTitles = new Set();
-  
-    // Map keywords → titles
-    for (const [keyword, titles] of Object.entries(titleMap)) {
-      if (jobTitle.includes(keyword) || jobDescription.includes(keyword)) {
-        titles.forEach(t => matchedTitles.add(t));
-      }
-    }
-  
-    // Always include these general titles
-    matchedTitles.add("Recruiter");
-    matchedTitles.add("Hiring Manager");
-    matchedTitles.add("Talent Acquisition");
-  
-    const matchedSeniorities = new Set();
-    const seniorityMap = {
-      'entry': ['entry-level', 'junior', 'intern', 'co-op'],
-      'senior': ['senior', 'sr.', 'lead'],
-      'manager': ['manager', 'lead'],
-      'director': ['director'],
-      'vp': ['vp', 'vice president'],
-      'head': ['head of'],
-      'founder': ['founder'],
-      'c_suite': ['ceo', 'cto', 'cfo', 'coo', 'cmo', 'cio', 'chief'],
-      'partner': ['partner']
-    };
+async function extractQueryParams(jobData) {
+  const companyName = jobData["Organization"] || "";
+  const jobTitle = jobData["Job Title"] || "";
 
-    // Map keywords/phrases in title and description to seniorities
-    for (const [seniorityLevel, keywords] of Object.entries(seniorityMap)) {
-      for (const keyword of keywords) {
-        if (jobTitle.includes(keyword) || jobDescription.includes(keyword)) {
-          matchedSeniorities.add(seniorityLevel);
-        }
-      }
+  // Try LLM-powered extraction first
+  try {
+    const response = await new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          action: "generateLLMParams",
+          jobData: jobData
+        },
+        resolve
+      );
+    });
+    if (response.success && response.params) {
+      console.log("✅ LLM params:", response.params);
+      return {
+        title: response.params.job_titles || [],
+        person_seniorities: response.params.seniorities || [],
+        q_organization_keyword_tags: response.params.keywords || [],
+        organization_name: companyName.trim(),
+        ai_generated: true
+      };
+    } else {
+      throw new Error(response.error || "LLM extraction failed");
     }
-
-    // Default to 'entry' and 'senior' if no specific seniority is found
-    if (matchedSeniorities.size === 0) {
-      matchedSeniorities.add('entry');
-      matchedSeniorities.add('senior');
-    }
-  
-    const result = {
-      title: Array.from(matchedTitles),
+  } catch (error) {
+    console.warn("LLM extraction failed, falling back to keyword logic:", error);
+    // Fallback to your original extraction logic
+    const fallbackTitles = getFallbackTitles(jobTitle);
+    return {
+      title: fallbackTitles,
       organization_name: companyName.trim(),
-      organization_locations: jobLocationRaw.split(',').map(loc => loc.trim()).filter(Boolean),
-      q_organization_keyword_tags: jobCategoryRaw.split(',').map(tag => tag.trim()).filter(Boolean),
-      person_seniorities: Array.from(matchedSeniorities),
+      ai_generated: false
     };
-  
-    console.log("✅ extractQueryParams →", result);
-    return result;
   }
+}
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "scanJobPosting") {
-      const job = extractJobInfoFromTags();
-      const query = extractQueryParams(job);
-
-      chrome.runtime.sendMessage(
-        {
-          action: "findRelevantConnections",
-          query
-        },
-        (response) => {
-          if (response && response.error) {
-            chrome.runtime.sendMessage({
-              action: "apolloError",
-              error: response.error
+        const job = extractJobInfoFromTags();
+        console.log("✅ Job Data extracted:", job);
+        
+        extractQueryParams(job).then(query => {
+            // Ensure organization_name is always set from scraped job data if missing
+            if (!query.organization_name || !query.organization_name.trim()) {
+                query.organization_name = job["Organization"] || "";
+            }
+            console.log("✅ Final query params:", query);
+            chrome.runtime.sendMessage(
+                {
+                    action: "findRelevantConnections",
+                    query
+                },
+                (response) => {
+                    if (response && response.error) {
+                        chrome.runtime.sendMessage({
+                            action: "apolloError",
+                            error: response.error
+                        });
+                    } else if (response) {
+                        chrome.runtime.sendMessage({
+                            action: "apolloResults",
+                            organization: response.organization,
+                            people: response.people
+                        });
+                    } else {
+                        chrome.runtime.sendMessage({
+                            action: "apolloError",
+                            error: "No response from background script."
+                        });
+                    }
+                }
+            );
+            sendResponse(job);
+        }).catch(error => {
+            console.error("Error generating query params:", error);
+            sendResponse({ 
+                jobData: job, 
+                error: error.message,
+                success: false 
             });
-          } else if (response) {
-            chrome.runtime.sendMessage({
-              action: "apolloResults",
-              organization: response.organization,
-              people: response.people
-            });
-          } else {
-            chrome.runtime.sendMessage({
-              action: "apolloError",
-              error: "No response from background script."
-            });
-          }
-        }
-      );
-      sendResponse(job);
+        });
+        
+        return true; // Keep message channel open for async response
     }
   });
   
