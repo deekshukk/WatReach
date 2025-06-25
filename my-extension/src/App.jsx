@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Users, Scan, Network, ArrowLeft, ExternalLink } from "lucide-react";
 import './App.css';
@@ -13,7 +12,6 @@ export default function App() {
       role: "Senior Software Engineer",
       company: "Meta",
       avatar: "AC",
-      matchScore: 95,
     },
     {
       id: 2,
@@ -21,7 +19,6 @@ export default function App() {
       role: "Product Manager",
       company: "Google",
       avatar: "SW",
-      matchScore: 88,
     },
     {
       id: 3,
@@ -29,7 +26,6 @@ export default function App() {
       role: "Engineering Manager",
       company: "Amazon",
       avatar: "ML",
-      matchScore: 92,
     },
     {
       id: 4,
@@ -37,7 +33,6 @@ export default function App() {
       role: "Full Stack Developer",
       company: "Netflix",
       avatar: "JP",
-      matchScore: 85,
     },
   ]);
 
@@ -90,11 +85,6 @@ export default function App() {
     <div className="scanning-container animate-fade-in">
       <div className="scanning-content">
         <div className="scanning-loader">
-          <div className="pulse-rings">
-            <div className="pulse-ring"></div>
-            <div className="pulse-ring"></div>
-            <div className="pulse-ring"></div>
-          </div>
           <div className="loader-icon">
             <Scan className="scan-icon-loading" />
           </div>
@@ -116,8 +106,8 @@ export default function App() {
     <div className="watreach-container animate-fade-in">
       <div className="watreach-header">
         <div className="watreach-logo">
-          <div className="logo-icon">
-            <Users className="users-icon" />
+        <div className="logo-icon">
+            <Network className="sparkles-icon" />
           </div>
           <h1 className="watreach-title">WatReach</h1>
         </div>
@@ -155,10 +145,6 @@ export default function App() {
             </div>
 
             <div className="connection-actions">
-              <div className="match-score">
-                <span className="match-percentage">{connection.matchScore}%</span>
-                <span className="match-label">match</span>
-              </div>
               <button className="linkedin-button hover-scale">
                 <ExternalLink className="external-icon" />
                 Connect
