@@ -1,4 +1,3 @@
-<<<<<<< yashnewworkingbranch
 function cleanOrgName(name) {
   if (!name) return '';
   // Remove common suffixes and extra whitespace
@@ -308,44 +307,12 @@ async function searchPeopleOnApollo(params) {
 
 // LLM-powered parameter extraction
 async function generateLLMParamsWithOpenAI(jobData) {
-=======
-const OPENAI_API_KEY = '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'; 
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "generateContactTitles") {
-    generateContactTitlesWithOpenAI(request.jobData)
-      .then(titles => {
-        sendResponse({ success: true, titles: titles });
-      })
-      .catch(error => {
-        console.error("OpenAI API error:", error);
-        sendResponse({ success: false, error: error.message });
-      });
-    
-    return true; // Keep message channel open for async response
-  }
-});
-
-async function generateContactTitlesWithOpenAI(jobData) {
->>>>>>> main
   const jobTitle = jobData["Job Title"] || "";
   const organization = jobData["Organization"] || "";
   const jobDescription = jobData["Job Description"] || "";
   const requirements = jobData["Requirements"] || "";
-<<<<<<< yashnewworkingbranch
 
   const prompt = `Given the following job posting, generate a JSON object with:\n- job_titles: 5-7 specific job titles of people who would be decision makers or involved in hiring for this role (e.g., managers, team leads, recruiters, department heads)\n- seniorities: relevant seniority levels (e.g., entry, manager, director, vp, c_suite)\n- keywords: relevant keywords or skills for the search\n\nJob Title: ${jobTitle}\nCompany: ${organization}\nDescription: ${jobDescription.substring(0, 400)}\nRequirements: ${requirements.substring(0, 200)}\n\nReturn ONLY a JSON object like:\n{\n  "job_titles": [...],\n  "seniorities": [...],\n  "keywords": [...]\n}`;
-=======
-  
-  const prompt = `Based on this job posting, generate 5-7 specific job titles of people who would be decision makers or involved in hiring for this role. Consider managers, team leads, recruiters, and department heads.
-
-Job Title: ${jobTitle}
-Company: ${organization}
-Description: ${jobDescription.substring(0, 400)}
-Requirements: ${requirements.substring(0, 200)}
-
-Return ONLY a JSON array of job titles, no other text. Example: ["Engineering Manager", "Senior Technical Recruiter", "VP of Engineering"]`;
->>>>>>> main
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -357,7 +324,6 @@ Return ONLY a JSON array of job titles, no other text. Example: ["Engineering Ma
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-<<<<<<< yashnewworkingbranch
           { role: "system", content: "You are an expert at extracting structured search parameters from job postings. Always respond with valid JSON." },
           { role: "user", content: prompt }
         ],
@@ -365,27 +331,10 @@ Return ONLY a JSON array of job titles, no other text. Example: ["Engineering Ma
         temperature: 0.2
       })
     });
-=======
-          {
-            role: "system",
-            content: "You are an expert at identifying hiring decision makers. Always respond with valid JSON arrays of realistic job titles."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_tokens: 150,
-        temperature: 0.2
-      })
-    });
-
->>>>>>> main
     if (!response.ok) {
       const error = await response.json();
       throw new Error(`OpenAI API error: ${error.error?.message || response.statusText}`);
     }
-<<<<<<< yashnewworkingbranch
     const data = await response.json();
     let content = data.choices[0].message.content.trim();
     // Extract JSON from the response
@@ -467,29 +416,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 }); 
-=======
-
-    const data = await response.json();
-    let content = data.choices[0].message.content.trim();
-    
-    if (content.includes('[')) {
-      content = content.substring(content.indexOf('['));
-    }
-    if (content.includes(']')) {
-      content = content.substring(0, content.lastIndexOf(']') + 1);
-    }
-    
-    const titles = JSON.parse(content);
-    
-    if (!Array.isArray(titles)) {
-      throw new Error("Invalid response format from OpenAI");
-    }
-    
-    return titles;
-    
-  } catch (error) {
-    console.error("Error calling OpenAI:", error);
-    throw error;
-  }
-}
->>>>>>> main
