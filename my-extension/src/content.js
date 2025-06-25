@@ -65,6 +65,8 @@ function getFallbackTitles(jobTitle) {
 async function extractQueryParams(jobData) {
     const companyName = jobData["Organization"] || "";
     const jobTitle = jobData["Job Title"] || "";
+    const location = jobData["Location"] || "";
+
     
     console.log("🤖 Requesting AI-generated contact titles...");
     
@@ -93,7 +95,6 @@ async function extractQueryParams(jobData) {
         const result = {
             title: titles.slice(0, 6), // Limit to 6 titles
             organization_name: companyName.trim(),
-            ai_generated: response.success
         };
         
         return result;
