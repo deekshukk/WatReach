@@ -1,50 +1,59 @@
-import React, { useState } from "react";
-import { Users, Scan, Network, ArrowLeft, ExternalLink } from "lucide-react";
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { Users, Scan, Loader2, ExternalLink, Network, ArrowLeft } from "lucide-react";
+import "./App.css";
 
 export default function App() {
   const [currentView, setCurrentView] = useState("home");
   const [isScanning, setIsScanning] = useState(false);
-  const [connections] = useState([
-    {
-      id: 1,
-      name: "Alex Chen",
-      role: "Senior Software Engineer",
-      company: "Meta",
-      avatar: "AC",
-    },
-    {
-      id: 2,
-      name: "Sarah Wong",
-      role: "Product Manager",
-      company: "Google",
-      avatar: "SW",
-    },
-    {
-      id: 3,
-      name: "Michael Liu",
-      role: "Engineering Manager",
-      company: "Amazon",
-      avatar: "ML",
-    },
-    {
-      id: 4,
-      name: "Jessica Park",
-      role: "Full Stack Developer",
-      company: "Netflix",
-      avatar: "JP",
-    },
-  ]);
+  const [connections, setConnections] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const listener = (message) => {
+      if (message.action === "apolloResults") {
+        const formattedConnections = (message.people || []).map((person, index) => ({
+          id: index + 1,
+          name: person.name || "No Name",
+          role: person.title || "No Title",
+          company: person.organization?.name || "Unknown Company",
+          linkedinUrl: person.linkedin_url || "#",
+        }));
+        setConnections(formattedConnections);
+        setIsScanning(false);
+        setCurrentView("connections");
+      } else if (message.action === "apolloError") {
+        setError(message.error);
+        setIsScanning(false);
+        setCurrentView("home");
+      }
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    return () => chrome.runtime.onMessage.removeListener(listener);
+  }, []);
 
   const handleScan = () => {
     setIsScanning(true);
     setCurrentView("scanning");
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsScanning(false);
-      setCurrentView("connections");
-    }, 2500);
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: "scanJobPosting" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error:", chrome.runtime.lastError.message);
+            setIsScanning(false);
+            setCurrentView("home");
+            return;
+          }
+
+          setTimeout(() => {
+            setIsScanning(false);
+            setCurrentView("connections");
+          }, 1000);
+        }
+      );
+    });
   };
 
   const renderHomeView = () => (
@@ -89,10 +98,10 @@ export default function App() {
             <Scan className="scan-icon-loading" />
           </div>
         </div>
-        
+
         <h2 className="scanning-title">Scanning Job Posting</h2>
         <p className="scanning-subtitle">Finding relevant connections...</p>
-        
+
         <div className="scanning-progress">
           <div className="progress-bar">
             <div className="progress-fill"></div>
@@ -106,7 +115,7 @@ export default function App() {
     <div className="watreach-container animate-fade-in">
       <div className="watreach-header">
         <div className="watreach-logo">
-        <div className="logo-icon">
+          <div className="logo-icon">
             <Network className="sparkles-icon" />
           </div>
           <h1 className="watreach-title">WatReach</h1>
@@ -137,18 +146,21 @@ export default function App() {
             <div className="connection-avatar">
               <span>{connection.avatar}</span>
             </div>
-            
             <div className="connection-info">
               <h3 className="connection-name">{connection.name}</h3>
               <p className="connection-role">{connection.role}</p>
               <p className="connection-company">{connection.company}</p>
             </div>
-
             <div className="connection-actions">
-              <button className="linkedin-button hover-scale">
+              <a
+                href={connection.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="linkedin-button hover-scale"
+              >
                 <ExternalLink className="external-icon" />
-                Connect
-              </button>
+                View LinkedIn
+              </a>
             </div>
           </div>
         ))}
@@ -168,4 +180,3 @@ export default function App() {
     </div>
   );
 }
-

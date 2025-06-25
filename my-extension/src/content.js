@@ -1,5 +1,10 @@
 console.log("content.js scraper is live");
 
+// Define the observer before using it
+const observer = new MutationObserver(() => {
+  // You can add logic here if you want to react to DOM changes
+});
+
 function extractJobInfoFromTags() {
     const modal = document.querySelector(".modal__content.height--100.overflow--hidden");
     if (!modal) {
@@ -37,78 +42,43 @@ function extractJobInfoFromTags() {
     return jobData;
 }
 
-// Fallback function for when AI fails
-function getFallbackTitles(jobTitle) {
-    const jobTitleLower = jobTitle.toLowerCase();
-    
-    const titleMap = {
-        software: ["Software Engineering Manager", "Technical Recruiter", "VP of Engineering", "Senior Software Engineer"],
-        engineer: ["Engineering Manager", "Technical Lead", "VP of Engineering", "Technical Recruiter"],
-        finance: ["Finance Director", "Portfolio Manager", "Investment Team Lead", "Finance Recruiter"],
-        product: ["Head of Product", "Product Manager", "VP of Product", "Product Recruiter"],
-        data: ["Data Science Manager", "ML Engineering Lead", "Analytics Director", "Technical Recruiter"],
-        design: ["Design Manager", "Head of Design", "UX Director", "Creative Recruiter"],
-        marketing: ["Marketing Director", "CMO", "Digital Marketing Lead", "Marketing Recruiter"],
-        sales: ["Sales Director", "VP of Sales", "Sales Manager", "Sales Recruiter"],
-    };
-    
-    for (const [keyword, titles] of Object.entries(titleMap)) {
-        if (jobTitleLower.includes(keyword)) {
-            return titles;
-        }
-    }
-    
-    // Default fallback
-    return ["Hiring Manager", "Technical Recruiter", "Early Talent"];
-}
-
 async function extractQueryParams(jobData) {
-    const companyName = jobData["Organization"] || "";
-    const jobTitle = jobData["Job Title"] || "";
-    const location = jobData["Location"] || "";
+  const companyName = jobData["Organization"] || "";
+  const jobTitle = jobData["Job Title"] || "";
 
-    
-    console.log("🤖 Requesting AI-generated contact titles...");
-    
-    try {
-        // Send message to background script to call OpenAI API
-        const response = await new Promise((resolve) => {
-            chrome.runtime.sendMessage(
-                {
-                    action: "generateContactTitles",
-                    jobData: jobData
-                },
-                resolve
-            );
-        });
-        
-        let titles;
-        if (response.success) {
-            titles = response.titles;
-            console.log("✅ AI-generated titles:", titles);
-        } else {
-            console.warn("❌ AI generation failed:", response.error);
-            titles = getFallbackTitles(jobTitle);
-            console.log("🔄 Using fallback titles:", titles);
-        }
-        
-        const result = {
-            title: titles.slice(0, 6), // Limit to 6 titles
-            organization_name: companyName.trim(),
-        };
-        
-        return result;
-        
-    } catch (error) {
-        console.error("Error in extractQueryParams:", error);
-        const fallbackTitles = getFallbackTitles(jobTitle);
-        
-        return {
-            title: fallbackTitles,
-            organization_name: companyName.trim(),
-            ai_generated: false
-        };
+  // Try LLM-powered extraction first
+  try {
+    const response = await new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          action: "generateLLMParams",
+          jobData: jobData
+        },
+        resolve
+      );
+    });
+    if (response.success && response.params) {
+      console.log("✅ LLM params:", response.params);
+      return {
+        title: response.params.job_titles || [],
+        person_seniorities: response.params.seniorities || [],
+        q_organization_keyword_tags: response.params.keywords || [],
+        organization_name: companyName.trim(),
+        ai_generated: true
+      };
+    } else {
+      throw new Error(response.error || "LLM extraction failed");
     }
+  } catch (error) {
+    console.warn("LLM extraction failed, falling back to keyword logic:", error);
+    // Fallback to your original extraction logic
+    const fallbackTitles = getFallbackTitles(jobTitle);
+    return {
+      title: fallbackTitles,
+      organization_name: companyName.trim(),
+      ai_generated: false
+    };
+  }
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -117,12 +87,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("✅ Job Data extracted:", job);
         
         extractQueryParams(job).then(query => {
+            // Ensure organization_name is always set from scraped job data if missing
+            if (!query.organization_name || !query.organization_name.trim()) {
+                query.organization_name = job["Organization"] || "";
+            }
             console.log("✅ Final query params:", query);
-            sendResponse({ 
-                jobData: job, 
-                queryParams: query,
-                success: true 
-            });
+            chrome.runtime.sendMessage(
+                {
+                    action: "findRelevantConnections",
+                    query
+                },
+                (response) => {
+                    if (response && response.error) {
+                        chrome.runtime.sendMessage({
+                            action: "apolloError",
+                            error: response.error
+                        });
+                    } else if (response) {
+                        chrome.runtime.sendMessage({
+                            action: "apolloResults",
+                            organization: response.organization,
+                            people: response.people
+                        });
+                    } else {
+                        chrome.runtime.sendMessage({
+                            action: "apolloError",
+                            error: "No response from background script."
+                        });
+                    }
+                }
+            );
+            sendResponse(job);
         }).catch(error => {
             console.error("Error generating query params:", error);
             sendResponse({ 
@@ -134,19 +129,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         
         return true; // Keep message channel open for async response
     }
-});
-
-const observer = new MutationObserver(() => {
-    const modal = document.querySelector('.modal__content.height--100.overflow--hidden');
-    const alreadyInjected = document.getElementById("watreach-btn");
+  });
   
-    if (modal && !alreadyInjected) {
-        console.log("🟢 Modal detected, injecting button...");
-        // injectWatReachButton(modal); // Uncomment when you implement this
-    }
-});
-
-observer.observe(document.body, {
+  observer.observe(document.body, {
     childList: true,
     subtree: true
 });
