@@ -40,7 +40,7 @@ function extractJobInfoFromTags() {
     });
   
     return jobData;
-  }
+}
 
 async function extractQueryParams(jobData) {
   const companyName = jobData["Organization"] || "";
@@ -81,7 +81,7 @@ async function extractQueryParams(jobData) {
   }
 }
 
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "scanJobPosting") {
         const job = extractJobInfoFromTags();
         console.log("✅ Job Data extracted:", job);
@@ -134,4 +134,4 @@ async function extractQueryParams(jobData) {
   observer.observe(document.body, {
     childList: true,
     subtree: true
-  });
+});

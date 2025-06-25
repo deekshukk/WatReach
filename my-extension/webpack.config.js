@@ -26,7 +26,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'public/popup.html',
       filename: 'popup.html',
-      chunks: ['popup']  // 👈 only inject popup.js into popup.html
+      chunks: ['popup']  // only inject popup.js into popup.html
     }),
     new CopyPlugin({
       patterns: [

@@ -1,4 +1,5 @@
 {
+<<<<<<< yashnewworkingbranch
     "manifest_version": 3,
     "name": "My React Extension",
     "version": "1.0",
@@ -20,3 +21,33 @@
       "service_worker": "background.js"
     }
   }
+=======
+  "manifest_version": 3,
+  "name": "My React Extension",
+  "version": "1.0",
+  "description": "A Chrome Extension built with React and Webpack",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open Extension"
+  },
+  "permissions": [
+    "activeTab", 
+    "scripting" 
+  ],
+  "host_permissions": [
+    "https://waterlooworks.uwaterloo.ca/*",
+    "https://api.openai.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://waterlooworks.uwaterloo.ca/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+  
+}
+>>>>>>> main

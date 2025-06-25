@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react"
-import { Users, Scan, Loader2 } from "lucide-react"
-import "./App.css"
+import React, { useState, useEffect } from "react";
+import { Users, Scan, Loader2, ExternalLink, Network, ArrowLeft } from "lucide-react";
+import "./App.css";
 
 export default function App() {
-  const [currentView, setCurrentView] = useState("home")
-  const [isScanning, setIsScanning] = useState(false)
-  const [connections, setConnections] = useState([])
-  const [error, setError] = useState(null)
+  const [currentView, setCurrentView] = useState("home");
+  const [isScanning, setIsScanning] = useState(false);
+  const [connections, setConnections] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const listener = (message) => {
@@ -16,7 +16,7 @@ export default function App() {
           name: person.name || "No Name",
           role: person.title || "No Title",
           company: person.organization?.name || "Unknown Company",
-          linkedinUrl: person.linkedin_url || "#"
+          linkedinUrl: person.linkedin_url || "#",
         }));
         setConnections(formattedConnections);
         setIsScanning(false);
@@ -34,7 +34,7 @@ export default function App() {
   const handleScan = () => {
     setIsScanning(true);
     setCurrentView("scanning");
-  
+
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.tabs.sendMessage(
         tabs[0].id,
@@ -46,7 +46,7 @@ export default function App() {
             setCurrentView("home");
             return;
           }
-  
+
           setTimeout(() => {
             setIsScanning(false);
             setCurrentView("connections");
@@ -57,92 +57,126 @@ export default function App() {
   };
 
   const renderHomeView = () => (
-    <div className="container">
-      <header className="header">
-        <div className="header-left">
-          <div className="logo-circle yellow-bg">
-            <Users className="icon-black" />
+    <div className="watreach-container animate-fade-in">
+      <div className="watreach-header">
+        <div className="watreach-logo">
+          <div className="logo-icon">
+            <Network className="sparkles-icon" />
           </div>
-          <h1 className="title">WatReach</h1>
+          <h1 className="watreach-title">WatReach</h1>
         </div>
-      </header>
+      </div>
 
-      <main className="main-content">
-        <h2>Find your next dream job 🚀 </h2>
-        <p className="description">
-          Scan job postings to find connections that can help with your application
-        </p>
-        <button className="btn-yellow" onClick={handleScan}>
-          Scan Job Posting
-        </button>
-        {error && <div className="error-message">{error}</div>}
-      </main>
+      <div className="watreach-main">
+        <div className="hero-section">
+          <h2 className="hero-title">Find your next dream job 🚀</h2>
+          <p className="hero-description">
+            Scan job postings to discover connections that can help accelerate your application
+          </p>
+        </div>
 
-      <footer className="footer">
-        Scan job postings and find connections
-      </footer>
+        <div className="scan-section">
+          <button className="scan-button hover-scale" onClick={handleScan}>
+            <Scan className="scan-icon" />
+            <span>Scan Job Posting</span>
+            <div className="button-shine"></div>
+          </button>
+        </div>
+      </div>
+
+      <div className="watreach-footer">
+        <p>Connect smarter, not harder</p>
+      </div>
     </div>
-  )
+  );
 
   const renderScanningView = () => (
-    <div className="scanning-view">
-      <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
-      <h2>Scanning Job Posting</h2>
-      <p>Finding relevant connections</p>
-    </div>
-  )
-  
-  const renderConnectionsView = () => (
-    <div className="container">
-      <header className="header">
-        <div className="header-left">
-          <div className="logo-circle yellow-bg">
-            <Users className="icon-black" />
+    <div className="scanning-container animate-fade-in">
+      <div className="scanning-content">
+        <div className="scanning-loader">
+          <div className="loader-icon">
+            <Scan className="scan-icon-loading" />
           </div>
-          <h1 className="title">WatReach</h1>
+        </div>
+
+        <h2 className="scanning-title">Scanning Job Posting</h2>
+        <p className="scanning-subtitle">Finding relevant connections...</p>
+
+        <div className="scanning-progress">
+          <div className="progress-bar">
+            <div className="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderConnectionsView = () => (
+    <div className="watreach-container animate-fade-in">
+      <div className="watreach-header">
+        <div className="watreach-logo">
+          <div className="logo-icon">
+            <Network className="sparkles-icon" />
+          </div>
+          <h1 className="watreach-title">WatReach</h1>
         </div>
         <button
-          className="btn-yellow-small" onClick={() => setCurrentView("home")}
+          className="new-scan-button hover-scale"
+          onClick={() => setCurrentView("home")}
         >
+          <ArrowLeft className="arrow-icon" />
           New Scan
         </button>
-      </header>
+      </div>
 
-      <p className="connections-count">
-        Found {connections.length} potential connections
-      </p>
+      <div className="connections-header">
+        <h2 className="connections-title">
+          Found {connections.length} potential connections
+        </h2>
+        <p className="connections-subtitle">Sorted by relevance match</p>
+      </div>
 
       <div className="connections-list">
-        {connections.map((connection) => (
-          <div key={connection.id} className="connection-card">
+        {connections.map((connection, index) => (
+          <div
+            key={connection.id}
+            className="connection-card hover-lift"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className="connection-avatar">
+              <span>{connection.avatar}</span>
+            </div>
             <div className="connection-info">
               <h3 className="connection-name">{connection.name}</h3>
               <p className="connection-role">{connection.role}</p>
               <p className="connection-company">{connection.company}</p>
             </div>
-            <a
-              href={connection.linkedinUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="linkedin-btn"
-            >
-              View LinkedIn
-            </a>      
+            <div className="connection-actions">
+              <a
+                href={connection.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="linkedin-button hover-scale"
+              >
+                <ExternalLink className="external-icon" />
+                View LinkedIn
+              </a>
+            </div>
           </div>
         ))}
       </div>
 
-      <footer className="footer">
-        Scan job postings and find connections
-      </footer>
+      <div className="watreach-footer">
+        <p>Connect smarter, not harder</p>
+      </div>
     </div>
-  )
+  );
 
   return (
-    <div className="app-container">
+    <div className="watreach-app">
       {currentView === "home" && renderHomeView()}
       {currentView === "scanning" && renderScanningView()}
       {currentView === "connections" && renderConnectionsView()}
     </div>
-  )
+  );
 }
