@@ -17,6 +17,7 @@ export default function App() {
           role: person.title || "No Title",
           company: person.organization?.name || "Unknown Company",
           linkedinUrl: person.linkedin_url || "#",
+          photoUrl: person.photo_url || person.profile_photo_url || "",
         }));
         setConnections(formattedConnections);
         setIsScanning(false);
@@ -144,7 +145,11 @@ export default function App() {
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className="connection-avatar">
-              <span>{connection.avatar}</span>
+              {connection.photoUrl ? (
+                <img src={connection.photoUrl} alt={connection.name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <span>{connection.avatar}</span>
+              )}
             </div>
             <div className="connection-info">
               <h3 className="connection-name">{connection.name}</h3>

@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 function cleanOrgName(name) {
   if (!name) return '';
   // Remove common suffixes and extra whitespace
@@ -50,7 +52,7 @@ function deriveExpectedDomain(organizationName) {
 const APOLLO_API_KEY = 'RkAYDXn_fooT15v42PkAwg';
 
 // LLM (OpenAI) API Key
-const OPENAI_API_KEY = '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'; // IMPORTANT: Replace with your actual key
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function enrichOrganizationByDomain(domain) {
   if (!domain) return null;
@@ -347,6 +349,36 @@ async function generateLLMParamsWithOpenAI(jobData) {
     console.error("Error calling OpenAI for LLM params:", error);
     throw error;
   }
+}
+
+// Helper function to progressively reduce keywords and retry search
+async function searchPeopleWithFallbacks(params) {
+  let allKeywords = (params.q_keywords || '').split(',').map(k => k.trim()).filter(Boolean);
+  let keywordSets = [];
+  if (allKeywords.length > 0) {
+    keywordSets.push(allKeywords); // all keywords
+    if (allKeywords.length > 3) keywordSets.push(allKeywords.slice(0, 3)); // top 3
+    if (allKeywords.length > 1) keywordSets.push([allKeywords[0]]); // top 1
+  }
+  keywordSets.push([]); // no keywords (broadest)
+
+  for (let keywords of keywordSets) {
+    let searchParams = { ...params, q_keywords: keywords.join(', ') };
+    let people = await searchPeopleOnApollo(searchParams);
+    if (people && people.length > 0) {
+      return people;
+    }
+  }
+
+  // Final fallback: remove organization/domain filter, search only by titles/keywords
+  let orglessParams = { ...params };
+  delete orglessParams.organization;
+  let people = await searchPeopleOnApollo(orglessParams);
+  if (people && people.length > 0) {
+    return people;
+  }
+
+  return []; // If all fail, return empty
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
